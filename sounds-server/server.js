@@ -2,8 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const multer = require("multer");
 const http = require("http");
-// const socketIo = require("socket.io");
-const fs = require("fs");
+const socketIo = require("socket.io");
+// const fs = require("fs");
 // const {
 //   handlingDevices,
 //   sendNextChunk,
@@ -18,34 +18,43 @@ app.use(express.static("uploads"));
 
 const server = http.createServer(app);
 
-// const io = socketIo(server, {
-//   cors: {
-//     origin: "*",
-//     methods: ["GET", "POST"],
-//   },
-// });
+const io = socketIo(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
 
-// io.on("connection", (socket) => {
-//   const chunkSize = 1024; // Adjust the chunk size as needed
+io.on("connection", (socket) => {
+  // socket.emit("clientId", handlingDevices());
+  // socket.emit("newChunk", sendNextChunk());
 
-//   // const mp3Chunk = [];
+  socket.on(
+    "play-in-all-devices",
+    () => {
+      console.log(">>> noice");
 
-//   const mp3Stream = fs.createReadStream("audio.mp3", {
-//     highWaterMark: chunkSize,
-//   });
-//   console.log("🚀 ~ file: Server.js:34 ~ io.on ~ mp3Stream:", mp3Stream);
+      setTimeout(() => {
+        socket.broadcast.emit("play-song");
+      }, 900);
 
-//   // mp3Stream.on("data", (chunk) => {
-//   //   console.log(">>> not working")
-//   //   mp3Chunk.push(chunk);
-//   // });
-//   // console.log(">>> mp3Chunk", mp3Chunk);
+      socket.emit("play-song");
+    }
+    // socket.broadcast.emit("newChunk", chunkData)
+  );
 
-//   socket.emit("clientId", handlingDevices());
-//   // socket.emit("newChunk", sendNextChunk());
-//   socket.on("handshake", handshakeRecord(socket));
-//   socket.on("startCall", startCall(socket));
-// });
+  socket.on(
+    "pause-in-all-devices",
+    () => {
+      console.log(">>> pause-song");
+
+      socket.broadcast.emit("pause-song");
+      socket.emit("pause-song");
+    }
+    // socket.broadcast.emit("newChunk", chunkData)
+  );
+  // socket.on("pause", startCall(socket));
+});
 
 const storage = multer.diskStorage({
   filename: function (req, file, cb) {
@@ -62,22 +71,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
   res.json("File uploaded Successfully.");
 });
 
-app.post("/upload-2", (req, res) => {
-  console.log(">>> uoloadu-2");
-  res.status(200).write("Noice");
-});
-
-// app.get("/stream-audio", streamAudio);
-
 const port = 4001;
 server.listen(port, () => {
   console.log(`App listening at http://localhost:${port}`);
 });
-
-/* 
-Big plan
-
-the music will be stored in the uploads and will be stored in database
-after that when all have listened after 30min delete it then
-
-*/

@@ -4,12 +4,6 @@ const multer = require("multer");
 const http = require("http");
 const socketIo = require("socket.io");
 // const fs = require("fs");
-// const {
-//   handlingDevices,
-//   sendNextChunk,
-//   handshakeRecord,
-//   startCall,
-// } = require("./src/res/handlingComputes");
 
 const app = express();
 app.use(cors());
@@ -25,35 +19,25 @@ const io = socketIo(server, {
   },
 });
 
+const delayOf5Sec = () => {
+  const now = new Date(); // Current time
+  return new Date(now.getTime() + 2 * 1000);
+};
+
 io.on("connection", (socket) => {
-  // socket.emit("clientId", handlingDevices());
-  // socket.emit("newChunk", sendNextChunk());
+  socket.on("play-in-all-devices", () => {
+    const timeAfter5Seconds = delayOf5Sec();
+    console.log(">> songs will be played after", timeAfter5Seconds);
+    socket.broadcast.emit("play-song", { timeStamp: timeAfter5Seconds });
+    socket.emit("play-song", { timeStamp: timeAfter5Seconds });
+  });
 
-  socket.on(
-    "play-in-all-devices",
-    () => {
-      console.log(">>> noice");
-
-      setTimeout(() => {
-        socket.broadcast.emit("play-song");
-      }, 900);
-
-      socket.emit("play-song");
-    }
-    // socket.broadcast.emit("newChunk", chunkData)
-  );
-
-  socket.on(
-    "pause-in-all-devices",
-    () => {
-      console.log(">>> pause-song");
-
-      socket.broadcast.emit("pause-song");
-      socket.emit("pause-song");
-    }
-    // socket.broadcast.emit("newChunk", chunkData)
-  );
-  // socket.on("pause", startCall(socket));
+  socket.on("pause-in-all-devices", () => {
+    const timeAfter5Seconds = delayOf5Sec();
+    console.log(">>> pause-song", timeAfter5Seconds);
+    socket.broadcast.emit("pause-song", { timeStamp: timeAfter5Seconds });
+    socket.emit("pause-song", { timeStamp: timeAfter5Seconds });
+  });
 });
 
 const storage = multer.diskStorage({
